@@ -1,4 +1,5 @@
 import random
+import statistics
 
 def calculate_trades():
 	investment = 2000
@@ -6,7 +7,7 @@ def calculate_trades():
 	trades_day = 4.0
 	strategy_efficiency = 0.85
 	order_amount = 5 / 100
-	highest_order_amount = 10000
+	highest_order_amount = 15000
 	gain_percentage = 0.12
 	loss_percentage = -0.30
 	investment_goal = 1000000
@@ -34,21 +35,39 @@ def calculate_trades():
 		return trades
 
 	all_simulated_trades = []
-	for i in range(1000):
+	for i in range(50):
 		trades = array_trades(investment)
 		all_simulated_trades.append({
 			'Quantity_of_trades': trades_quantity,
 			'Trades': trades
 		})
 
-	min_trades_quantity = min(item['Quantity_of_trades'] for item in all_simulated_trades)
-	max_trades_quantity = max(item['Quantity_of_trades'] for item in all_simulated_trades)
+
+	quantity_of_trades = [item['Quantity_of_trades'] for item in all_simulated_trades]
+	
+	average = statistics.mean(quantity_of_trades)
+	std_deviation = statistics.stdev(quantity_of_trades)
+	
+	min_trades_quantity = min(quantity_of_trades)
+	max_trades_quantity = max(quantity_of_trades)
+	
+	minus_two_std_deviation = (average - 2 * std_deviation) 
+	plus_two_std_deviation = (average + 2 * std_deviation) 
+	
 	print("======To achieve USD " + str(investment_goal) + "===========")
 	print("Lowest number of trades:", min_trades_quantity)
 	print("Maximum number of trades:", max_trades_quantity)
 	print("=========Years===========")
 	print("Min of years to achive:", min_trades_quantity / trades_day / 252)
+	print("-2 Standard Deviation:", minus_two_std_deviation / trades_day / 252)
+	print("Average years:", average / trades_day / 252)
+	print("+2 Standard Deviation:", plus_two_std_deviation / trades_day / 252)
 	print("Max of years to achive:", max_trades_quantity / trades_day / 252)
+
+
+
+	
+
 
 
 calculate_trades()
