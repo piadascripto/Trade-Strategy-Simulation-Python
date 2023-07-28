@@ -1,5 +1,6 @@
 import random
 import itertools
+import statistics
 import matplotlib.pyplot as plt
 
 
@@ -7,13 +8,13 @@ import matplotlib.pyplot as plt
 def calculate_trades():
     investment = 2600
     trades_day = 3
-    strategy_efficiency = 0.82 #0.72
+    strategy_efficiency = 0.72
     order_amount = 5 / 100
     highest_order_amount = 15000
     gain_percentage = 0.09
     loss_percentage = -0.13
-    days_to_simulate = 252
-    simulations = 1000
+    days_to_simulate = 250
+    simulations = 100
     trades_within_year = trades_day * days_to_simulate
 
     
@@ -49,6 +50,7 @@ def calculate_trades():
     #print("------------------")
     #print(trade_result_intraday)
 
+	#Simulate the trades multiple ties and collect statitics 
     def simulate_trades():
         simulated_trades = []
         for i in range(simulations):
@@ -57,30 +59,52 @@ def calculate_trades():
 									 'Trade Result Sum': sum(trade_result_intraday)
 									})
     
-        #Find highest and lowest sums
+        #Find highest and lowest
         highest_simulated_trades = max(simulated_trades, key=lambda x: x['Trade Result Sum'])
         lowest_simulated_trades = min(simulated_trades, key=lambda x: x['Trade Result Sum'])
         #print("------------------")
         #print(highest_simulated_trades)
-        #print("------------------")
         #print(lowest_simulated_trades)
+		
 		#Collecting only the trades results
         highest_simulated_trades = highest_simulated_trades['Trades Result per Day']
         lowest_simulated_trades = lowest_simulated_trades['Trades Result per Day']
      
 		#print("------------------")
         #print(highest_simulated_trades)
-        #print("------------------")
         #print(lowest_simulated_trades)
 
 		
-		# Calculate average Trade Result Sum
+		# Calculate Average 
         all_trade_result_sum = [simulated_trade['Trade Result Sum'] for simulated_trade in simulated_trades]
-        average_simulated_trades = sum(all_trade_result_sum) / len(all_trade_result_sum)
+        average_simulated_trades_sum = sum(all_trade_result_sum) / len(all_trade_result_sum)
+        #print("------------------")
+        #print(average_simulated_trades_sum)
 
-        return simulated_trades, highest_simulated_trades, lowest_simulated_trades, average_simulated_trades
+        # Find the item closest to average_simulated_trades
+        closest_simulated_trades_to_average_simulated_trades_sum = min(simulated_trades, key=lambda x: abs(x['Trade Result Sum'] - average_simulated_trades_sum))
+        average_simulated_trades = closest_simulated_trades_to_average_simulated_trades_sum['Trades Result per Day']
 
-    simulated_trades, highest_simulated_trades, lowest_simulated_trades, average_simulated_trades = simulate_trades()
+        #print("------------------")
+        #print(average_simulated_trades)
+        
+        # Calculate standard deviation
+        std_deviation = statistics.stdev(all_trade_result_sum)
+
+        # Find the lists closest to std deviation * 2 and std deviation * -2
+        closest_simulated_trades_to_std_dev_plus_2_simulated_trades = min(simulated_trades, key=lambda x: abs(x['Trade Result Sum'] - (average_simulated_trades_sum + std_deviation * 2)))
+        std_dev_plus_2_simulated_trades = closest_simulated_trades_to_std_dev_plus_2_simulated_trades['Trades Result per Day']
+
+
+        closest_simulated_trades_to_std_dev_minus_2_simulated_trades = min(simulated_trades, key=lambda x: abs(x['Trade Result Sum'] - (average_simulated_trades_sum - std_deviation * 2)))
+        std_dev_minus_2_simulated_trades = closest_simulated_trades_to_std_dev_minus_2_simulated_trades['Trades Result per Day']
+
+        #print(std_dev_plus_2_simulated_trades)
+        #print(std_dev_minus_2_simulated_trades)
+
+        return simulated_trades, highest_simulated_trades, lowest_simulated_trades, average_simulated_trades, std_dev_plus_2_simulated_trades, std_dev_minus_2_simulated_trades
+
+    simulated_trades, highest_simulated_trades, lowest_simulated_trades, average_simulated_trades, std_dev_plus_2_simulated_trades, std_dev_minus_2_simulated_trades = simulate_trades()
 
     def accumulate_trades_intraday(choosen_simulated_trades):
         accumulated_trades_intraday = list(itertools.accumulate(choosen_simulated_trades))
@@ -90,15 +114,24 @@ def calculate_trades():
     #print(accumulate_trades_intraday(highest_simulated_trades))
     #print("------------------")
     #print(accumulate_trades_intraday(lowest_simulated_trades))
-    lineA = accumulate_trades_intraday(highest_simulated_trades)
-    lineB = accumulate_trades_intraday(lowest_simulated_trades)
+    line_highest = accumulate_trades_intraday(highest_simulated_trades)
+    line_plus_std_2 = accumulate_trades_intraday(std_dev_plus_2_simulated_trades)
+    line_average = accumulate_trades_intraday(average_simulated_trades)
+    line_minus_std_2 = accumulate_trades_intraday(std_dev_minus_2_simulated_trades)
+    line_lowest = accumulate_trades_intraday(lowest_simulated_trades)
+    
+
 	
 	# Generate x-axis values (assuming each value represents a day)
-    x = list(range(1, len(lineA) + 1))
+    x = list(range(1, len(line_average) + 1))
 	
 	# Plot the data
-    plt.plot(x, lineA, label='Highest Simulated Trades')
-    plt.plot(x, lineB, label='Lowest Simulated Trades')
+    plt.plot(x, line_highest, label='Highest Simulated Trades')
+    plt.plot(x, line_plus_std_2, label='2 std plus Trades')
+    plt.plot(x, line_average, label='Average Simulated Trades')
+    plt.plot(x, line_minus_std_2, label='2 std minus  Trades')
+    plt.plot(x, line_lowest, label='Lowest Simulated Trades')
+
     plt.xlabel('Days')
     plt.ylabel('Trade Result Sum')
     plt.title('Trade Result Sum Over Time')
